@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustDeck · 可信交付演示</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">TD</span>
+    <span class="brand-name">TrustDeck</span>
+    <span class="brand-tag">发现风险 · 查看依据 · 完成确认</span>
+  </div>
+  <div class="stepper" id="stepper">
+    <span class="step-item active" data-step="1">1 材料输入</span>
+    <span class="step-item" data-step="2">2 检查</span>
+    <span class="step-item" data-step="3">3 风险识别</span>
+    <span class="step-item" data-step="4">4 人工确认</span>
+    <span class="step-item" data-step="5">5 导出</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ============ 阶段 1：材料输入 ============ -->
+  <section id="view-input" class="view">
+    <div class="input-hero">
+      <h1>把零散想法变成一份<em>你敢带上场</em>的演示文稿</h1>
+      <p class="sub">AI 负责生成，TrustDeck 帮你发现风险、查看依据、完成确认。</p>
+    </div>
+
+    <div class="input-card">
+      <div class="input-tip">
+        💡 <strong>两种方式随你选，可以只填一种，也可以一起用：</strong><br>
+        ① 直接粘贴文字 / 写下想法　② 上传已有的 PPT 或 PDF，我们会帮你解析内容并逐项检查。
+      </div>
+
+      <div class="field">
+        <label>① 粘贴文字或想法（可选）</label>
+        <textarea id="sourceText" placeholder="粘贴你的数据、文档、或先写几句想法…&#10;&#10;例如：我们 Q3 营收 1200 万，同比增长 35%，主要来自北美市场。客户流失率从 8% 降到 5%，我们认为是新的定价策略起了作用。"></textarea>
+      </div>
+
+      <div class="field">
+        <label>② 上传文件（可选）</label>
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">点击选择或拖拽文件到此处</div>
+          <div class="upload-hint">支持 .ppt / .pptx / .pdf</div>
+          <input type="file" id="fileInput" accept=".ppt,.pptx,.pdf" multiple hidden>
+        </div>
+        <div class="upload-list" id="uploadList"></div>
+        <div class="mock-file-row">
+          <button class="sample-btn" id="btnMockFile">📎 模拟解析示例文件</button>
+          <span class="mock-tag">Mock：示例文件内容为预置数据，真实版本将调用模型解析你的文件</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>用途</label>
+          <select id="useCase">
+            <option value="pitch">投资人路演 (Pitch)</option>
+            <option value="proposal">客户提案 (Proposal)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>语言</label>
+          <select id="lang">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>示例材料（一键填充，快速体验）</label>
+        <div class="samples">
+          <button class="sample-btn" data-sample="pitch">路演示例（含数据冲突）</button>
+          <button class="sample-btn" data-sample="clean">干净示例（数据一致）</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnGenerate" class="btn primary" disabled>开始检查 →</button>
+      </div>
+      <p class="hint" id="inputHint">请先输入源材料。</p>
+    </div>
+  </section>
+
+  <!-- ============ 阶段 2：检查中 ============ -->
+  <section id="view-generating" class="view hidden">
+    <div class="gen-loading">
+      <div class="spinner"></div>
+      <h2>正在检查你的内容…</h2>
+      <p class="gen-sub">我们会解析材料、识别风险点，并标注每处内容的依据来源。</p>
+      <ul class="gen-steps" id="genSteps">
+        <li class="gen-step">解析源材料</li>
+        <li class="gen-step">抽取事实性断言</li>
+        <li class="gen-step">标注来源类型</li>
+        <li class="gen-step">一致性检查</li>
+        <li class="gen-step">风险分级</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 阶段 3+4：核验工作台 ============ -->
+  <section id="view-review" class="view hidden">
+    <!-- 体检摘要 -->
+    <div class="health-card" id="healthCard"></div>
+
+    <div class="review-layout">
+      <!-- 左：演示文稿预览 -->
+      <div class="deck-panel">
+        <div class="panel-head">
+          <h2>演示文稿预览</h2>
+          <span class="doc-status" id="docStatus">待核验</span>
+        </div>
+        <div class="deck-slides" id="deckSlides"></div>
+        <div class="deck-nav">
+          <button class="btn ghost" id="prevSlide">← 上一页</button>
+          <span class="page-indicator" id="pageIndicator">1 / N</span>
+          <button class="btn ghost" id="nextSlide">下一页 →</button>
+        </div>
+      </div>
+
+      <!-- 右：风险清单 -->
+      <div class="risk-panel">
+        <div class="panel-head">
+          <h2>风险清单</h2>
+          <span class="risk-count" id="riskCount"></span>
+        </div>
+        <div class="risk-note">
+          ⚠ 确认表示您已核对并对该内容负责，<strong>不保证事实绝对正确</strong>。
+        </div>
+        <div class="risk-filters" id="riskFilters">
+          <button class="filter active" data-filter="all">全部</button>
+          <button class="filter" data-filter="high">高风险</button>
+          <button class="filter" data-filter="mid">中风险</button>
+          <button class="filter" data-filter="low">低风险</button>
+        </div>
+        <div class="risk-list" id="riskList"></div>
+      </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="review-actions">
+      <div class="review-summary" id="reviewSummary"></div>
+      <div class="review-buttons">
+        <button class="btn ghost" id="btnRegenerate">重新生成</button>
+        <button class="btn primary" id="btnExport">导出 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 阶段 5：导出 ============ -->
+  <section id="view-export" class="view hidden">
+    <div class="export-card" id="exportCard"></div>
+  </section>
+
+</main>
+
+<!-- 风险处理弹窗 -->
+<div class="modal-backdrop hidden" id="modal">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
